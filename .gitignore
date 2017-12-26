@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Let's not commit the data files
+*.csv
+*.npy
