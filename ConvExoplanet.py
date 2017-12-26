@@ -12,7 +12,7 @@ import scipy.fftpack as fft
 def preprocess():
     # inputting data
     data = np.loadtxt('ExoTrain.csv',skiprows=1,delimiter=',')
-    data = np.random.shuffle(data)
+    np.random.shuffle(data)
     x_train = data[:,1:]
     y_train = data[:, 0, np.newaxis] - 1
     y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
@@ -34,7 +34,7 @@ def preprocess():
         x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
     print('Preprocessing done')
     np.save('preprocessed',[x_train,y_train,x_test,y_test])
-# preprocess()
+preprocess()
 [x_train,y_train,x_test,y_test] = np.load('preprocessed.npy')
 
 x_train = x_train[:,101:3100]

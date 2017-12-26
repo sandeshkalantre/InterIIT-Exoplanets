@@ -12,7 +12,7 @@ import scipy.fftpack as fft
 def preprocess():
     # inputting data
     data = np.loadtxt('ExoTrain.csv',skiprows=1,delimiter=',')
-    data = np.random.shuffle(data)
+    np.random.shuffle(data)
     x_train = data[:,1:]
     y_train = data[:, 0, np.newaxis] - 1
     y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
