@@ -40,12 +40,20 @@ def dtw_add(data):
 	
 	for i in range(data.shape[0]):
 		
-		y = -3*std[i]*signal.square(template,duty=0.1)	
+		y = -3*std[i]*signal.square(template,duty=0.1)
+		y[0] = data[i][0]
+		y[-1] = data[i][-1]	
 		distance, path = fastdtw(data[i], y, dist=euclidean)
 		dist_temp.append(distance)
 		path_temp.append(path)
+        dist_temp = np.array(dist_temp)
+        dist_temp = dist_temp.T
+	np.save('dtw_values',[dist_temp])
 
-	np.save('dtw_values',[dist_temp,avg,std,y])
+print(x_train.shape)
 
 dtw_add(x_train)
 
+[dist_temp] = np.load('dtw_values.npy') 
+print(x_train.shape)
+print(dist_temp.shape)
