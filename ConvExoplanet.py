@@ -42,6 +42,8 @@ def preprocess():
         x_train[i] = sg.medfilt(x_train[i],3)
         x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
         y = -3*np.std(x_train[i])*sg.square(template,duty=0.1)
+		y[0] = x_train[i][0]
+		y[-1] = x_train[i][-1]	
         distance, path = fastdtw(x_train[i], y, dist=euclidean)
         dtw_train[i] = distance
     
@@ -51,13 +53,15 @@ def preprocess():
         x_test[i] = sg.medfilt(x_test[i],3)
         x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
     	y = -3*np.std(x_test[i])*sg.square(template,duty=0.1)
+		y[0] = x_test[i][0]
+		y[-1] = x_test[i][-1]	
         distance, path = fastdtw(x_test[i], y, dist=euclidean)
         dtw_test[i] = distance
 
     print('Preprocessing done')
     np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
-# preprocess()
+preprocess()
 
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
 # x_train_final = x_train[:,96:3095]
