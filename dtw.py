@@ -40,15 +40,16 @@ def dtw_add(data):
 	
 	for i in range(data.shape[0]):
 		
-		y = -3*std[i]*signal.square(template,duty=0.1)
+		#y = -3*std[i]*signal.square(template,duty=0.1)
+		y = template*avg[i].  #normal baseline average
 		y[0] = data[i][0]
 		y[-1] = data[i][-1]	
 		distance, path = fastdtw(data[i], y, dist=euclidean)
 		dist_temp.append(distance)
 		path_temp.append(path)
         dist_temp = np.array(dist_temp)
-        dist_temp = dist_temp.T
 	np.save('dtw_values',[dist_temp])
+	np.save('output_val',[y_train])
 
 print(x_train.shape)
 
