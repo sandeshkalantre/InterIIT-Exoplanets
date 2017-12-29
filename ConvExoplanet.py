@@ -111,7 +111,7 @@ x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.
 # [x_train,y_train,x_test,y_test] = np.load('preprocessed_final_augmented.npy')
 
 # Parameters
-learning_rate = 0.01
+learning_rate = 0.001
 training_epochs = 50
 batch_size = 100
 display_step = 1
