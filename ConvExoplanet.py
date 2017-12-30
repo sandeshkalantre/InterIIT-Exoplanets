@@ -1,5 +1,3 @@
-# Lines 14 and 15 have the names of the test and train data csv file names. Also uncomment line 37 for the first run. (Preprocesses data)
-
 """ 
 Adapted from
 Project: https://github.com/aymericdamien/TensorFlow-Examples/
@@ -15,27 +13,20 @@ from scipy.spatial.distance import euclidean
 def preprocess():
 	# inputting data
 	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
-
 	np.random.shuffle(data)
-
 	x_train = data[:,1:]
 	y_train = data[:, 0, np.newaxis] - 1
 	y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
 	dtw_train = [None]*x_train.shape[0]
-
 	data = np.loadtxt('exoTest.csv',skiprows=1,delimiter=',')
 	x_test = data[:,1:]
 	y_test = data[:, 0, np.newaxis] - 1
 	y_test = np.concatenate((1-y_test,y_test),axis=1).astype(int)
 	dtw_test = [None]*x_test.shape[0]
-
 	del data
 	template = np.linspace(1, x_train.shape[1], 1, endpoint=False)
-
 	print('Data inputted')
 	print('Preprocessing data')
-
-
 	for  i in range(x_train.shape[0]):
 		if i%100 == 0 :
 			print(i)
@@ -46,7 +37,6 @@ def preprocess():
 		y[-1] = x_train[i][-1]	
 		distance, path = fastdtw(x_train[i], y, dist=euclidean)
 		dtw_train[i] = distance
-	
 	for  i in range(x_test.shape[0]):
 		if i%100 == 0 :
 			print(i)
@@ -57,28 +47,14 @@ def preprocess():
 		y[-1] = x_test[i][-1]	
 		distance, path = fastdtw(x_test[i], y, dist=euclidean)
 		dtw_test[i] = distance
-
 	print('Preprocessing done')
 	np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
 # preprocess()
 
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
-# x_train_final = x_train[:,96:3095]
-# x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,96:3095],axis=1)))
-# y_train_final = y_train
-# y_train_final = np.concatenate((y_train_final,y_train))
-# for i in range(10):
-# 	x_train_final = np.concatenate((x_train_final,x_train[:,97+i:3096+i]))
-# 	x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,97+i:3096+i],axis=1)))
-# 	y_train_final = np.concatenate((y_train_final,y_train))
-# 	y_train_final = np.concatenate((y_train_final,y_train))
-# 	print(i)
-
-# x_train,y_train = x_train_final,y_train_final
-# np.save('preprocessed_final',[x_train,y_train,x_test,y_test])
-# exit(0)
-# [x_train,y_train,x_test,y_test] = np.load('preprocessed_final.npy')
+x_train = x_train[:,96:3095]
+x_test = x_test[:,96:3095]
 
 x_test=x_train[:500]
 y_test=y_train[:500]
@@ -95,26 +71,21 @@ dtw_test = np.array(dtw_test).reshape([-1,1])
 dtw_train = np.array(dtw_train).reshape([-1,1])
 
 x_train = fft.dct(x_train)
-# x_train[:,:20] = 0
-# x_train[:,800:] = 0
-# x_train = fft.idct(x_train)
 x_train = x_train[:,20:800]
 x_test = fft.dct(x_test)
-# x_test[:,:20] = 0
-# x_test[:,800:] = 0
-# x_test = fft.idct(x_test)
 x_test = x_test[:,20:800]
 
 x_train = ((x_train - np.mean(x_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_train,axis=1, keepdims = True).reshape(-1,1))
 x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_test,axis=1, keepdims = True).reshape(-1,1))
-# np.save('preprocessed_final_augmented.npy',[x_train,y_train,x_test,y_test])
-# [x_train,y_train,x_test,y_test] = np.load('preprocessed_final_augmented.npy')
+dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
+dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
 
 # Parameters
-learning_rate = 0.01
-training_epochs = 10
-batch_size = 100
+learning_rate = 0.001
+training_epochs = 1
+batch_size = 300
 display_step = 1
+namechar = '4'
 
 # Network Parameters
 num_input = x_train.shape[1]
@@ -127,31 +98,25 @@ Y = tf.placeholder("float", [None, num_classes])
 dtw = tf.placeholder("float", [None, 1])
 keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
 
-out1 = 50
-out2 = 100
-out3 = 500
-out4 = 250
-
 # Store layers weight & bias
-weights = {
-	# 1x20 conv, 1 input, 32 outputs
-	'wc1': tf.Variable(tf.random_normal([1, 20, 1, out1])),
-	'wc2': tf.Variable(tf.random_normal([1, 20, out1, out2])),
-	# fully connected,  inputs, 1024 outputs
-	'wd1': tf.Variable(tf.random_normal([((((num_input+1)/2)+1)/2)*out2+1, out3])),
-	# 1024 inputs, 10 outputs (class prediction)
-	'wd2': tf.Variable(tf.random_normal([out3, out4])),
-	# 1024 inputs, 10 outputs (class prediction)
-	'out': tf.Variable(tf.random_normal([out4, num_classes]))
-}
+def weight(out1,out2,out3,name):
+	return {
+		# 1x20 conv, 1 input, 32 outputs
+		'wc1': tf.Variable(tf.random_normal([1, 20, 1, out1]),name=name),
+		'wc2': tf.Variable(tf.random_normal([1, 20, out1, out2]),name=name),
+		# fully connected,  inputs, 1024 outputs
+		'wd1': tf.Variable(tf.random_normal([((((num_input+1)/2)+1)/2)*out2+1, out3]),name=name),
+		# 1024 inputs, 10 outputs (class prediction)
+		'out': tf.Variable(tf.random_normal([out3, num_classes]),name=name)
+	}
 
-biases = {
-	'bc1': tf.Variable(tf.random_normal([out1])),
-	'bc2': tf.Variable(tf.random_normal([out2])),
-	'bd1': tf.Variable(tf.random_normal([out3])),
-	'bd2': tf.Variable(tf.random_normal([out4])),
-	'out': tf.Variable(tf.random_normal([num_classes]))
-}
+def bias(out1,out2,out3,name):
+	return {
+		'bc1': tf.Variable(tf.random_normal([out1]),name=name),
+		'bc2': tf.Variable(tf.random_normal([out2]),name=name),
+		'bd1': tf.Variable(tf.random_normal([out3]),name=name),
+		'out': tf.Variable(tf.random_normal([num_classes]),name=name)
+	}
 
 # Create some wrappers for simplicity
 def conv2d(x, W, b, strides=1):
@@ -167,7 +132,9 @@ def maxpool2d(x, k=2):
 						  padding='SAME')
 
 # Create model
-def conv_net(x,DTW,dropout):
+def conv_net_2c1d(x,DTW,dropout,out1,out2,out3,name):
+	weights = weight(out1,out2,out3,name)
+	biases = bias(out1,out2,out3,name)
 	x = tf.reshape(x, shape=[-1, 1, num_input, 1])
 	print(x.shape)
 	print(tf.shape(x))
@@ -209,62 +176,31 @@ def conv_net(x,DTW,dropout):
 	print(fc1.shape)
 	print(tf.shape(fc1))
 	print("")
-	fc2 = tf.add(tf.matmul(fc1, weights['wd2']), biases['bd2'])
-	print(fc2.shape)
-	print(tf.shape(fc2))
-	print("")
-	fc2 = tf.nn.relu(fc2)
-	print(fc2.shape)
-	print(tf.shape(fc2))
-	print("")
 	 # Apply Dropout
-	fc2 = tf.nn.dropout(fc2, dropout)
-	print(fc2.shape)
-	print(tf.shape(fc2))
+	fc1 = tf.nn.dropout(fc1, dropout)
+	print(fc1.shape)
+	print(tf.shape(fc1))
 	print("")
 	# Output, class prediction
-	out = tf.add(tf.matmul(fc2, weights['out']), biases['out'])
+	out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
 	return out
 
 # Construct model
-logits = conv_net(X,dtw,keep_prob)
+logits = conv_net_2c1d(X,dtw,keep_prob,48,32,128,namechar)
 
-def softmax(X, theta = 1.0, axis = None):
-    """
-    Compute the softmax of each element along an axis of X.
-    Parameters
-    ----------
-    X: ND-Array. Probably should be floats. 
-    theta (optional): float parameter, used as a multiplier
-        prior to exponentiation. Default = 1.0
-    axis (optional): axis to compute values along. Default is the 
-        first non-singleton axis.
-
-    Returns an array the same size as X. The result will sum to 1
-    along the specified axis.
-    """
-    # make X at least 2d
-    y = np.atleast_2d(X)
-    # find axis
-    if axis is None:
-        axis = next(j[0] for j in enumerate(y.shape) if j[1] > 1)
-    # multiply y against the theta parameter, 
-    y = y * float(theta)
-    # subtract the max for numerical stability
-    y = y - np.expand_dims(np.max(y, axis = axis), axis)
-    # exponentiate y
-    y = np.exp(y)
-    # take the sum along the specified axis
-    ax_sum = np.expand_dims(np.sum(y, axis = axis), axis)
-    # finally: divide elementwise
-    p = y / ax_sum
-    # flatten if X was 1D
-    if len(X.shape) == 1: p = p.flatten()
-    return p
+def softmax(X,axis):
+	y = np.atleast_2d(X)
+	y = y * float(1.0)
+	y = y - np.expand_dims(np.max(y, axis = axis), axis)
+	y = np.exp(y)
+	ax_sum = np.expand_dims(np.sum(y, axis = axis), axis)
+	p = y / ax_sum
+	if len(X.shape) == 1: p = p.flatten()
+	return p
 
 def f1(logits_pred,y):
 	# print(type(logits_pred))
-	pred = softmax(logits_pred,axis=0)
+	pred = softmax(logits_pred,axis=1)
 	argmax_prediction = np.argmax(pred,axis=1)
 	argmax_y = np.argmax(y,1)
 	TP = float(np.count_nonzero(np.rint(argmax_prediction * argmax_y)))
@@ -285,12 +221,12 @@ loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
 	logits=logits, labels=tf.argmax(Y,axis = 1)))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 train_op = optimizer.minimize(loss_op)
-# Initializing the variables
 
+# Initializing the variables
 init = tf.global_variables_initializer()
 with tf.Session() as sess:
-	# sess.run(init)
-	tf.train.Saver().restore(sess, "/tmp/model"+str(1)+".ckpt")
+	sess.run(init)
+	tf.train.Saver([v for v in tf.all_varaibles() if v.name[:1]==namechar]).restore(sess, "models/model6.ckpt")
 	# Training cycle
 	writer = tf.summary.FileWriter('./graph', sess.graph);writer.close();
 	for epoch in range(training_epochs):
@@ -310,6 +246,8 @@ with tf.Session() as sess:
 															,keep_prob : dropout
 															,dtw: batch_dtw
 															})
+			# logits_test = logits.eval({X: batch_x, Y: batch_y, keep_prob: 1.0, dtw: batch_dtw})
+			# print("F1-test:", f1(logits_test,batch_y))
 			# Compute average loss
 			avg_cost += c / total_batch
 		# Display logs per epoch step
@@ -317,19 +255,6 @@ with tf.Session() as sess:
 			print("Epoch:", '%04d' % (epoch+1), "cost={:.9f}".format(avg_cost))
 			logits_test = logits.eval({X: x_test, Y: y_test, keep_prob: 1.0, dtw: dtw_test})
 			print("F1-test:", f1(logits_test,y_test))
-		# if avg_cost < cost_thresh:
-		#     break
 	print("Optimization Finished!")
-
-	save_path = tf.train.Saver().save(sess, "/tmp/model"+str(1)+".ckpt")
+	save_path = tf.train.Saver([v for v in tf.all_variables() if v.name[:1]==namechar]).save(sess, "models/model6.ckpt")
 	print("Model saved in file: %s" % save_path)
-
-	# prediction = pred.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0})
-	# print(np.argmax(prediction,axis = 1))
-	# print("TP:", TP.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("TN:", TN.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("FP:", FP.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("FN:", FN.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("precision:", precision.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("recall:", recall.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
-	# print("F1:", f1.eval({X: x_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0}))
