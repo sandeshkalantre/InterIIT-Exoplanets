@@ -94,33 +94,39 @@ from scipy.spatial.distance import euclidean
 dtw_test = np.array(dtw_test).reshape([-1,1])
 dtw_train = np.array(dtw_train).reshape([-1,1])
 
-t_train =  []
-for i in range(x_train.shape[0]):
-	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
-	print(i)
-t_train = np.array(t_train)
-# x_train[:,:20] = 0
-# x_train[:,800:] = 0
-# x_train = fft.idct(x_train)
-#t_train = t_train[20:800]
+# t_train =  []
+# for i in range(x_train.shape[0]):
+# 	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
+# 	print(i)
+# t_train = np.array(t_train)
+# # x_train[:,:20] = 0
+# # x_train[:,800:] = 0
+# # x_train = fft.idct(x_train)
+# #t_train = t_train[20:800]
 
 
-t_test = []
-for i in range(x_test.shape[0]):
-	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
-	print(i) 
+# t_test = []
+# for i in range(x_test.shape[0]):
+# 	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
+# 	print(i) 
 
-t_test = np.array(t_test)
-# x_test[:,:20] = 0
-# x_test[:,800:] = 0
-# x_test = fft.idct(x_test)
-#t_test = t_test[20:800]
+# t_test = np.array(t_test)
+# # x_test[:,:20] = 0
+# # x_test[:,800:] = 0
+# # x_test = fft.idct(x_test)
+# #t_test = t_test[20:800]
 
-for i in range(x_test.shape[0]):
-	t_train[i] = ((t_train[i] - np.mean(t_train[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_train[i],axis=1, keepdims = True).reshape(-1,1))
-	t_test[i] = ((t_test[i] - np.mean(t_test[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_test[i],axis=1, keepdims = True).reshape(-1,1))
-# np.save('preprocessed_final_augmented.npy',[x_train,y_train,x_test,y_test])
-# [x_train,y_train,x_test,y_test] = np.load('preprocessed_final_augmented.npy')
+# for i in range(x_test.shape[0]):
+# 	t_train[i] = ((t_train[i] - np.mean(t_train[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_train[i],axis=1, keepdims = True).reshape(-1,1))
+# 	t_test[i] = ((t_test[i] - np.mean(t_test[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_test[i],axis=1, keepdims = True).reshape(-1,1))
+# # np.save('preprocessed_final_augmented.npy',[x_train,y_train,x_test,y_test])
+# # [x_train,y_train,x_test,y_test] = np.load('preprocessed_final_augmented.npy')
+
+
+#np.save('preprocessed_wavt',[t_test,t_train])
+
+[t_test,t_train] = np.load('preprocessed_wavt.npy')
+
 
 # Parameters
 learning_rate = 0.001
@@ -129,12 +135,13 @@ batch_size = 100
 display_step = 1
 
 # Network Parameters
-num_input = 10*x_train.shape[1]
+num_input = [10,x_train.shape[1]]
 num_classes = 2
 dropout = 0.80 # Dropout, probability to keep units
 
 # tf Graph input
-X = tf.placeholder("float", [None, num_input])
+print("error 1")
+X = tf.placeholder(tf.float32, shape=[None]+num_input)
 Y = tf.placeholder("float", [None, num_classes])
 dtw = tf.placeholder("float", [None, 1])
 keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
@@ -142,18 +149,19 @@ keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
 out1 = 48
 out2 = 32
 out3 = 128
-
+print("yaha tak theek hai")
 # Store layers weight & bias
 weights = {
 	# 1x20 conv, 1 input, 32 outputs
 	'wc1': tf.Variable(tf.random_normal([5, 20, 1, out1])),
 	'wc2': tf.Variable(tf.random_normal([5, 20, out1, out2])),
 	# fully connected,  inputs, 1024 outputs
-	'wd1': tf.Variable(tf.random_normal([((((num_input+1)/2)+1)/2)*out2+1, out3])),
+	'wd1': tf.Variable(tf.random_normal([((((num_input[0]*num_input[1]+1)/2)+1)/2)*out2+1, out3])),
 	# 1024 inputs, 10 outputs (class prediction)
 	'out': tf.Variable(tf.random_normal([out3, num_classes]))
 }
 
+print("error 2")
 biases = {
 	'bc1': tf.Variable(tf.random_normal([out1])),
 	'bc2': tf.Variable(tf.random_normal([out2])),
@@ -176,7 +184,8 @@ def maxpool2d(x, k=2):
 
 # Create model
 def conv_net(x,DTW,dropout):
-	x = tf.reshape(x, shape=[-1, 1, num_input, 1])
+	x = tf.reshape(x, shape=[-1, num_input[0], num_input[1], 1])
+	print("error yaha hai")
 	print(x.shape)
 	print(tf.shape(x))
 	print("")
@@ -260,7 +269,7 @@ with tf.Session() as sess:
 	# Training cycle
 	for epoch in range(training_epochs):
 		avg_cost = 0.
-		total_batch = int(len(x_train)/batch_size)
+		total_batch =  102#int(len(x_train)/batch_size)
 		X_batches = np.array_split(t_train, total_batch)
 		Y_batches = np.array_split(y_train, total_batch)
 		dtw_batches = np.array_split(dtw_train,total_batch)
@@ -269,11 +278,12 @@ with tf.Session() as sess:
 		for i in range(total_batch):
 			batch_x, batch_y, batch_dtw = X_batches[i], Y_batches[i], dtw_batches[i]
 			# Run optimization op (backprop) and cost op (to get loss value)
+			print(X_batches[i].shape)
 			_, c = sess.run([train_op, loss_op], feed_dict={
-															X: batch_x
-															,Y: batch_y
+															Y: batch_y
 															,keep_prob : dropout
 															,dtw: batch_dtw
+															,X: batch_x
 															})
 			# Compute average loss
 			avg_cost += c / total_batch
@@ -286,7 +296,7 @@ with tf.Session() as sess:
 		#     break
 	print("Optimization Finished!")
 
-	save_path = tf.train.Saver().save(sess, "/tmp/model.ckpt")
+	save_path = tf.train.Saver().save(sess, "/tmp/model_wav.ckpt")
 	print("Model saved in file: %s" % save_path)
 
 	prediction = pred.eval({X: t_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0})
