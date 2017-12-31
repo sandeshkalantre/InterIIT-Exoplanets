@@ -13,6 +13,8 @@ import scipy.fftpack as fft
 from fastdtw import fastdtw
 import scipy.signal as sg
 from scipy.spatial.distance import euclidean
+from scipy import signal 
+
 
 def preprocess():
     # inputting data
@@ -44,7 +46,7 @@ def preprocess():
         x_train[i] = sg.medfilt(x_train[i],3)
         x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
         #y = template*np.mean(x_train[i])
-        y = 3*std[i]*signal.square(template,duty=0.1)
+        y = 3*np.std(x_train[i])*signal.square(template,duty=0.1)
         y[0] = x_train[i][0]
         y[-1] = x_train[i][-1]  
         distance, path = fastdtw(x_train[i], y, dist=euclidean)
@@ -57,7 +59,7 @@ def preprocess():
         x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
         #y = template*np.mean(x_test[i])
         
-        y = 3*std[i]*signal.square(template,duty=0.1)
+        y = 3*np.std(x_train[i])*signal.square(template,duty=0.1)
         y[0] = x_test[i][0]
         y[-1] = x_test[i][-1]   
         distance, path = fastdtw(x_test[i], y, dist=euclidean)
@@ -90,9 +92,10 @@ dtw_train = np.concatenate((dtw_train_pos,dtw_train_neg[:33]))
 dtw_test = np.array(dtw_test).reshape([-1,1])
 dtw_train = np.array(dtw_train).reshape([-1,1])
 
-#dtw_train = ((dtw_train - np.mean(dtw_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(dtw_train,axis=1, keepdims = True).reshape(-1,1))
-#dtw_test = ((dtw_test - np.mean(dtw_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(dtw_test,axis=1, keepdims = True).reshape(-1,1))
+dtw_train = ((dtw_train - np.mean(dtw_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(dtw_train,axis=1, keepdims = True).reshape(-1,1))
+dtw_test = ((dtw_test - np.mean(dtw_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(dtw_test,axis=1, keepdims = True).reshape(-1,1))
 
+print(np.std(dtw_train,axis=1, keepdims = True).reshape(-1,1))
 
 # Parameters
 learning_rate = 0.1
@@ -110,7 +113,7 @@ X = tf.placeholder(tf.float32, [None, 1]) # mnist data image of shape 28*28=784
 Y = tf.placeholder(tf.float32, [None, num_classes]) # 0-9 digits recognition => 10 classes
 
 # Set model weights
-W = tf.Variable(initialize([1, 2]))
+W = tf.Variable(initialize([2]))
 b = tf.Variable(initialize([2]))
 
 # Construct model
