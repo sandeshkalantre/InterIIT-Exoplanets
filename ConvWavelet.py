@@ -65,57 +65,21 @@ def preprocess():
 
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_wav.npy')
 
-# # x_train_final = x_train[:,96:3095]
-# # x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,96:3095],axis=1)))
-# # y_train_final = y_train
-# # y_train_final = np.concatenate((y_train_final,y_train))
-# # for i in range(10):
-# # 	x_train_final = np.concatenate((x_train_final,x_train[:,97+i:3096+i]))
-# # 	x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,97+i:3096+i],axis=1)))
-# # 	y_train_final = np.concatenate((y_train_final,y_train))
-# # 	y_train_final = np.concatenate((y_train_final,y_train))
-# # 	print(i)
+dtw_test = np.array(dtw_test).reshape([-1,1])
+dtw_train = np.array(dtw_train).reshape([-1,1])
 
-# # x_train,y_train = x_train_final,y_train_final
-# # np.save('preprocessed_final',[x_train,y_train,x_test,y_test])
-# # exit(0)
-# # [x_train,y_train,x_test,y_test] = np.load('preprocessed_final.npy')
+t_train =  []
+for i in range(x_train.shape[0]):
+	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
+	print(i)
+t_train = np.array(t_train)
 
-# # x_test=x_train[:500]
-# # y_test=y_train[:500]
-# # dtw_test = dtw_train[:500]
-# # x_test=np.concatenate((x_test,x_train[:500]))
-# # y_test=np.concatenate((y_test,y_train[:500]))
-# # dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
-# # x_train = x_train[500:]
-# # y_train = y_train[500:]
-# # dtw_train = dtw_train[500:]
+t_test = []
+for i in range(x_test.shape[0]):
+	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
+	print(i) 
 
-
-# dtw_test = np.array(dtw_test).reshape([-1,1])
-# dtw_train = np.array(dtw_train).reshape([-1,1])
-
-# t_train =  []
-# for i in range(x_train.shape[0]):
-# 	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
-# 	print(i)
-# t_train = np.array(t_train)
-# # x_train[:,:20] = 0
-# # x_train[:,800:] = 0
-# # x_train = fft.idct(x_train)
-# #t_train = t_train[20:800]
-
-
-# t_test = []
-# for i in range(x_test.shape[0]):
-# 	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
-# 	print(i) 
-
-# t_test = np.array(t_test)
-# # x_test[:,:20] = 0
-# # x_test[:,800:] = 0
-# # x_test = fft.idct(x_test)
-# #t_test = t_test[20:800]
+t_test = np.array(t_test)
 
 # # np.save('preprocessed_wav_final',[t_train,y_train,dtw_train,t_test,y_test,dtw_test])
 [t_train,y_train,dtw_train,t_test,y_test,dtw_test] = np.load('preprocessed_wav_final.npy')
