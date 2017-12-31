@@ -1,0 +1,7 @@
+model0.ckpt => 48,32,128
+model1.ckpt => 50,100,500
+model2 -> with the train and test being [96:3095] and no dct, namechar is 1
+model3 -> 40, 80, 500, namechar = '1'
+model4 -> 32,16,128, namechar = '2'
+model5 -> 30,15,100, namechar = '3'
+model6 -> 48,32,128, namechar = '4'

@@ -68,17 +68,26 @@ def preprocess():
     print('Preprocessing done')
     np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
-preprocess()
+# preprocess()
 
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
+
+dtw_test = np.log(dtw_test)
+dtw_train = np.log(dtw_train)
 
 #x_test=np.concatenate((x_test,x_train[:500]))
 y_test=np.concatenate((y_test,y_train[:500]))
 dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
 #x_train = x_train[500:]
-y_train = y_train[500:2500]
-dtw_train = dtw_train[500:2500]
 
+dtw_train = np.array(dtw_train)
+y_train = np.array(y_train)
+dtw_train_pos = dtw_train[y_train[:,1] > 0]
+y_train_pos = y_train[y_train[:,1]>0]
+dtw_train_neg = dtw_train[y_train[:,1]==0]
+y_train_neg = y_train[y_train[:,1]==0]
+y_train = np.concatenate((y_train_pos,y_train_neg[:33]))
+dtw_train = np.concatenate((dtw_train_pos,dtw_train_neg[:33]))
 
 dtw_test = np.array(dtw_test).reshape([-1,1])
 dtw_train = np.array(dtw_train).reshape([-1,1])
@@ -89,9 +98,9 @@ dtw_test = ((dtw_test - np.mean(dtw_test,axis=1, keepdims = True).reshape(-1,1))
 print(np.std(dtw_train,axis=1, keepdims = True).reshape(-1,1))
 
 # Parameters
-learning_rate = 0.001
-training_epochs = 25
-batch_size = 100
+learning_rate = 0.1
+training_epochs = 50
+batch_size = 10
 display_step = 1
 
 # Network Parameters
@@ -123,7 +132,8 @@ recall = TP / (TP + FN)
 f1 = 2 * precision * recall / (precision + recall)
 
 # Minimize error using cross entropy
-cost = tf.reduce_mean(-tf.reduce_sum(Y*tf.log(pred), reduction_indices=1))
+# cost = tf.reduce_mean(-tf.reduce_sum(Y*tf.log(pred), reduction_indices=1))
+cost = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=tf.argmax(Y,axis = 1)))
 # Gradient Descent
 optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
@@ -155,8 +165,8 @@ with tf.Session() as sess:
         if (epoch) % display_step == 0:
             print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             print("F1-test:", f1.eval(session=sess,feed_dict={X: dtw_test, Y: y_test}))
-            print(W.eval())
-            print(b.eval())  
+            # print(W.eval())
+            # print(b.eval())  
 
     print("Optimization Finished!")
 
