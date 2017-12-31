@@ -147,7 +147,7 @@ keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
 out1 = 48
 out2 = 32
 out3 = 128
-
+print("yaha tak theek hai")
 # Store layers weight & bias
 weights = {
 	# 1x20 conv, 1 input, 32 outputs
@@ -181,7 +181,7 @@ def maxpool2d(x, k=2):
 
 # Create model
 def conv_net(x,DTW,dropout):
-	x = tf.reshape(x, shape=np.concatenate(([-1],num_input,[1])))
+	x = tf.reshape(x, shape=[-1, num_input[0], num_input[1], 1])
 	print(x.shape)
 	print(tf.shape(x))
 	print("")
@@ -265,7 +265,7 @@ with tf.Session() as sess:
 	# Training cycle
 	for epoch in range(training_epochs):
 		avg_cost = 0.
-		total_batch = int(len(x_train)/batch_size)
+		total_batch =  102#int(len(x_train)/batch_size)
 		X_batches = np.array_split(t_train, total_batch)
 		Y_batches = np.array_split(y_train, total_batch)
 		dtw_batches = np.array_split(dtw_train,total_batch)
@@ -274,11 +274,12 @@ with tf.Session() as sess:
 		for i in range(total_batch):
 			batch_x, batch_y, batch_dtw = X_batches[i], Y_batches[i], dtw_batches[i]
 			# Run optimization op (backprop) and cost op (to get loss value)
+			print(X_batches[i].shape)
 			_, c = sess.run([train_op, loss_op], feed_dict={
-															X: batch_x
-															,Y: batch_y
+															Y: batch_y
 															,keep_prob : dropout
 															,dtw: batch_dtw
+															,X: batch_x
 															})
 			# Compute average loss
 			print(str(i)+" : "+str(c))
@@ -292,7 +293,7 @@ with tf.Session() as sess:
 		#     break
 	print("Optimization Finished!")
 
-	save_path = tf.train.Saver().save(sess, "/tmp/model.ckpt")
+	save_path = tf.train.Saver().save(sess, "/tmp/model_wav.ckpt")
 	print("Model saved in file: %s" % save_path)
 
 	prediction = pred.eval({X: t_test, Y: y_test, dtw: dtw_test, keep_prob: 1.0})
