@@ -12,113 +12,118 @@ from fastdtw import fastdtw
 import scipy.signal as sg
 from scipy.spatial.distance import euclidean
 
-# def preprocess():
-# 	# inputting data
-# 	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
+def preprocess():
+	# inputting data
+	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
 
-# 	np.random.shuffle(data)
+	np.random.shuffle(data)
 
-# 	x_train = data[:,1:]
-# 	y_train = data[:, 0, np.newaxis] - 1
-# 	y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
-# 	dtw_train = [None]*x_train.shape[0]
+	x_train = data[:,1:]
+	y_train = data[:, 0, np.newaxis] - 1
+	y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
+	dtw_train = [None]*x_train.shape[0]
 
-# 	data = np.loadtxt('exoTest.csv',skiprows=1,delimiter=',')
-# 	x_test = data[:,1:]
-# 	y_test = data[:, 0, np.newaxis] - 1
-# 	y_test = np.concatenate((1-y_test,y_test),axis=1).astype(int)
-# 	dtw_test = [None]*x_test.shape[0]
+	data = np.loadtxt('exoTest.csv',skiprows=1,delimiter=',')
+	x_test = data[:,1:]
+	y_test = data[:, 0, np.newaxis] - 1
+	y_test = np.concatenate((1-y_test,y_test),axis=1).astype(int)
+	dtw_test = [None]*x_test.shape[0]
 
-# 	del data
-# 	template = np.linspace(1, x_train.shape[1], 1, endpoint=False)
+	del data
+	template = np.linspace(1, x_train.shape[1], 1, endpoint=False)
 
-# 	print('Data inputted')
-# 	print('Preprocessing data')
+	print('Data inputted')
+	print('Preprocessing data')
 
 
-# 	for  i in range(x_train.shape[0]):
-# 		if i%100 == 0 :
-# 			print(i)
-# 		x_train[i] = sg.medfilt(x_train[i],3)
-# 		x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
-# 		y = template*np.mean(x_train[i])
-# 		y[0] = x_train[i][0]
-# 		y[-1] = x_train[i][-1]	
-# 		distance, path = fastdtw(x_train[i], y, dist=euclidean)
-# 		dtw_train[i] = distance
+	for  i in range(x_train.shape[0]):
+		if i%100 == 0 :
+			print(i)
+		x_train[i] = sg.medfilt(x_train[i],3)
+		x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
+		y = template*np.mean(x_train[i])
+		y[0] = x_train[i][0]
+		y[-1] = x_train[i][-1]	
+		distance, path = fastdtw(x_train[i], y, dist=euclidean)
+		dtw_train[i] = distance
 	
-# 	for  i in range(x_test.shape[0]):
-# 		if i%100 == 0 :
-# 			print(i)
-# 		x_test[i] = sg.medfilt(x_test[i],3)
-# 		x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
-# 		y = template*np.mean(x_test[i])
-# 		y[0] = x_test[i][0]
-# 		y[-1] = x_test[i][-1]	
-# 		distance, path = fastdtw(x_test[i], y, dist=euclidean)
-# 		dtw_test[i] = distance
+	for  i in range(x_test.shape[0]):
+		if i%100 == 0 :
+			print(i)
+		x_test[i] = sg.medfilt(x_test[i],3)
+		x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
+		y = template*np.mean(x_test[i])
+		y[0] = x_test[i][0]
+		y[-1] = x_test[i][-1]	
+		distance, path = fastdtw(x_test[i], y, dist=euclidean)
+		dtw_test[i] = distance
 
-# 	print('Preprocessing done')
-# 	np.save('preprocessed_wav',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
+	print('Preprocessing done')
+	np.save('preprocessed_wav',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
 # preprocess()
 
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_wav.npy')
-# x_train_final = x_train[:,96:3095]
-# x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,96:3095],axis=1)))
-# y_train_final = y_train
-# y_train_final = np.concatenate((y_train_final,y_train))
-# for i in range(10):
-# 	x_train_final = np.concatenate((x_train_final,x_train[:,97+i:3096+i]))
-# 	x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,97+i:3096+i],axis=1)))
-# 	y_train_final = np.concatenate((y_train_final,y_train))
-# 	y_train_final = np.concatenate((y_train_final,y_train))
+
+# # x_train_final = x_train[:,96:3095]
+# # x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,96:3095],axis=1)))
+# # y_train_final = y_train
+# # y_train_final = np.concatenate((y_train_final,y_train))
+# # for i in range(10):
+# # 	x_train_final = np.concatenate((x_train_final,x_train[:,97+i:3096+i]))
+# # 	x_train_final = np.concatenate((x_train_final,np.flip(x_train[:,97+i:3096+i],axis=1)))
+# # 	y_train_final = np.concatenate((y_train_final,y_train))
+# # 	y_train_final = np.concatenate((y_train_final,y_train))
+# # 	print(i)
+
+# # x_train,y_train = x_train_final,y_train_final
+# # np.save('preprocessed_final',[x_train,y_train,x_test,y_test])
+# # exit(0)
+# # [x_train,y_train,x_test,y_test] = np.load('preprocessed_final.npy')
+
+# # x_test=x_train[:500]
+# # y_test=y_train[:500]
+# # dtw_test = dtw_train[:500]
+# # x_test=np.concatenate((x_test,x_train[:500]))
+# # y_test=np.concatenate((y_test,y_train[:500]))
+# # dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
+# # x_train = x_train[500:]
+# # y_train = y_train[500:]
+# # dtw_train = dtw_train[500:]
+
+
+# dtw_test = np.array(dtw_test).reshape([-1,1])
+# dtw_train = np.array(dtw_train).reshape([-1,1])
+
+# t_train =  []
+# for i in range(x_train.shape[0]):
+# 	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
 # 	print(i)
-
-# x_train,y_train = x_train_final,y_train_final
-# np.save('preprocessed_final',[x_train,y_train,x_test,y_test])
-# exit(0)
-# [x_train,y_train,x_test,y_test] = np.load('preprocessed_final.npy')
-
-# x_test=x_train[:500]
-# y_test=y_train[:500]
-# dtw_test = dtw_train[:500]
-# x_test=np.concatenate((x_test,x_train[:500]))
-# y_test=np.concatenate((y_test,y_train[:500]))
-# dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
-# x_train = x_train[500:]
-# y_train = y_train[500:]
-# dtw_train = dtw_train[500:]
+# t_train = np.array(t_train)
+# # x_train[:,:20] = 0
+# # x_train[:,800:] = 0
+# # x_train = fft.idct(x_train)
+# #t_train = t_train[20:800]
 
 
-dtw_test = np.array(dtw_test).reshape([-1,1])
-dtw_train = np.array(dtw_train).reshape([-1,1])
+# t_test = []
+# for i in range(x_test.shape[0]):
+# 	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
+# 	print(i) 
 
-t_train =  []
-for i in range(x_train.shape[0]):
-	t_train.append(sg.cwt(x_train[i], sg.ricker, np.arange(1,11)))
-	print(i)
-t_train = np.array(t_train)
-# x_train[:,:20] = 0
-# x_train[:,800:] = 0
-# x_train = fft.idct(x_train)
-#t_train = t_train[20:800]
+# t_test = np.array(t_test)
+# # x_test[:,:20] = 0
+# # x_test[:,800:] = 0
+# # x_test = fft.idct(x_test)
+# #t_test = t_test[20:800]
 
+# # np.save('preprocessed_wav_final',[t_train,y_train,dtw_train,t_test,y_test,dtw_test])
+[t_train,y_train,dtw_train,t_test,y_test,dtw_test] = np.load('preprocessed_wav_final.npy')
 
-t_test = []
-for i in range(x_test.shape[0]):
-	t_test.append(sg.cwt(x_test[i], sg.ricker, np.arange(1,11)))
-	print(i) 
-
-t_test = np.array(t_test)
-# x_test[:,:20] = 0
-# x_test[:,800:] = 0
-# x_test = fft.idct(x_test)
-#t_test = t_test[20:800]
-
-for i in range(x_test.shape[0]):
-	t_train[i] = ((t_train[i] - np.mean(t_train[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_train[i],axis=1, keepdims = True).reshape(-1,1))
-	t_test[i] = ((t_test[i] - np.mean(t_test[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_test[i],axis=1, keepdims = True).reshape(-1,1))
+# @Chinmay: TODO normalisation fir se kar lena
+# for i in range(x_test.shape[0]):
+# 	t_train[i] = ((t_train[i] - np.mean(t_train[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_train[i],axis=1, keepdims = True).reshape(-1,1))
+# 	t_test[i] = ((t_test[i] - np.mean(t_test[i],axis=1, keepdims = True).reshape(-1,1)) / np.std(t_test[i],axis=1, keepdims = True).reshape(-1,1))
 # np.save('preprocessed_final_augmented.npy',[x_train,y_train,x_test,y_test])
 # [x_train,y_train,x_test,y_test] = np.load('preprocessed_final_augmented.npy')
 
@@ -129,12 +134,12 @@ batch_size = 100
 display_step = 1
 
 # Network Parameters
-num_input = 10*x_train.shape[1]
+num_input = np.array([10,x_train.shape[1]])
 num_classes = 2
 dropout = 0.80 # Dropout, probability to keep units
 
 # tf Graph input
-X = tf.placeholder("float", [None, num_input])
+X = tf.placeholder("float", [None, num_input[0],num_input[1]])
 Y = tf.placeholder("float", [None, num_classes])
 dtw = tf.placeholder("float", [None, 1])
 keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
@@ -149,7 +154,7 @@ weights = {
 	'wc1': tf.Variable(tf.random_normal([5, 20, 1, out1])),
 	'wc2': tf.Variable(tf.random_normal([5, 20, out1, out2])),
 	# fully connected,  inputs, 1024 outputs
-	'wd1': tf.Variable(tf.random_normal([((((num_input+1)/2)+1)/2)*out2+1, out3])),
+	'wd1': tf.Variable(tf.random_normal([((((num_input[0]+1)/2)+1)/2)*((((num_input[1]+1)/2)+1)/2)*out2+1, out3])),
 	# 1024 inputs, 10 outputs (class prediction)
 	'out': tf.Variable(tf.random_normal([out3, num_classes]))
 }
@@ -176,7 +181,7 @@ def maxpool2d(x, k=2):
 
 # Create model
 def conv_net(x,DTW,dropout):
-	x = tf.reshape(x, shape=[-1, 1, num_input, 1])
+	x = tf.reshape(x, shape=np.concatenate(([-1],num_input,[1])))
 	print(x.shape)
 	print(tf.shape(x))
 	print("")
@@ -276,6 +281,7 @@ with tf.Session() as sess:
 															,dtw: batch_dtw
 															})
 			# Compute average loss
+			print(str(i)+" : "+str(c))
 			avg_cost += c / total_batch
 		# Display logs per epoch step
 		if epoch % display_step == 0:
