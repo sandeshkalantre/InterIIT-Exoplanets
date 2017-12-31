@@ -52,40 +52,45 @@ def preprocess():
 
 # preprocess()
 
-[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
-x_train = x_train[:,96:3095]
-x_test = x_test[:,96:3095]
+# [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
+# x_train = x_train[:,96:3095]
+# x_test = x_test[:,96:3095]
 
-x_test=x_train[:500]
-y_test=y_train[:500]
-dtw_test = dtw_train[:500]
-# x_test=np.concatenate((x_test,x_train[:500]))
-# y_test=np.concatenate((y_test,y_train[:500]))
-# dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
-x_train = x_train[500:]
-y_train = y_train[500:]
-dtw_train = dtw_train[500:]
+# x_test=x_train[:500]
+# y_test=y_train[:500]
+# dtw_test = dtw_train[:500]
+# # x_test=np.concatenate((x_test,x_train[:500]))
+# # y_test=np.concatenate((y_test,y_train[:500]))
+# # dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
+# x_train = x_train[500:]
+# y_train = y_train[500:]
+# dtw_train = dtw_train[500:]
 
 
-dtw_test = np.array(dtw_test).reshape([-1,1])
-dtw_train = np.array(dtw_train).reshape([-1,1])
+# dtw_test = np.array(dtw_test).reshape([-1,1])
+# dtw_train = np.array(dtw_train).reshape([-1,1])
 
-x_train = fft.dct(x_train)
-x_train = x_train[:,20:800]
-x_test = fft.dct(x_test)
-x_test = x_test[:,20:800]
+# x_train = fft.dct(x_train)
+# x_train = x_train[:,20:800]
+# x_test = fft.dct(x_test)
+# x_test = x_test[:,20:800]
 
-x_train = ((x_train - np.mean(x_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_train,axis=1, keepdims = True).reshape(-1,1))
-x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_test,axis=1, keepdims = True).reshape(-1,1))
-dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
-dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
+# x_train = ((x_train - np.mean(x_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_train,axis=1, keepdims = True).reshape(-1,1))
+# x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_test,axis=1, keepdims = True).reshape(-1,1))
+# dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
+# dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
+
+[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_final.npy')
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 1
+training_epochs = 5
 batch_size = 300
 display_step = 1
-namechar = '4'
+namechar = '1'
+modelfile = 'models/model3.ckpt'
+models_params = [40,80,500]
+toRestore = True
 
 # Network Parameters
 num_input = x_train.shape[1]
@@ -132,61 +137,32 @@ def maxpool2d(x, k=2):
 						  padding='SAME')
 
 # Create model
-def conv_net_2c1d(x,DTW,dropout,out1,out2,out3,name):
+def conv_net_2c1d(x,DTW,dropout,dims,name):
+	[out1,out2,out3] = dims
 	weights = weight(out1,out2,out3,name)
 	biases = bias(out1,out2,out3,name)
 	x = tf.reshape(x, shape=[-1, 1, num_input, 1])
-	print(x.shape)
-	print(tf.shape(x))
-	print("")
 	# Convolution Layer
 	conv1 = conv2d(x, weights['wc1'], biases['bc1'])
-	print(conv1.shape)
-	print(tf.shape(conv1))
-	print("")
 	# Max Pooling (down-sampling)
 	conv1 = maxpool2d(conv1, k=2)
-	print(conv1.shape)
-	print(tf.shape(conv1))
-	print("")
 	conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
-	print(conv2.shape)
-	print(tf.shape(conv2))
-	print("")
 	# Max Pooling (down-sampling)
 	conv2 = maxpool2d(conv2, k=2)
-	print(conv2.shape)
-	print(tf.shape(conv2))
-	print("")
 	# Fully connected layer
 	# Reshape conv2 output to fit fully connected layer input
 	fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]-1])
-	print(fc1.shape)
-	print(tf.shape(fc1))
-	print("")
 	fc1 = tf.concat([fc1,DTW],1)
-	print(fc1.shape)
-	print(tf.shape(fc1))
-	print("")
 	fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
-	print(fc1.shape)
-	print(tf.shape(fc1))
-	print("")
 	fc1 = tf.nn.relu(fc1)
-	print(fc1.shape)
-	print(tf.shape(fc1))
-	print("")
 	 # Apply Dropout
 	fc1 = tf.nn.dropout(fc1, dropout)
-	print(fc1.shape)
-	print(tf.shape(fc1))
-	print("")
 	# Output, class prediction
 	out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
 	return out
 
 # Construct model
-logits = conv_net_2c1d(X,dtw,keep_prob,48,32,128,namechar)
+logits = conv_net_2c1d(X,dtw,keep_prob,models_params,namechar)
 
 def softmax(X,axis):
 	y = np.atleast_2d(X)
@@ -226,7 +202,8 @@ train_op = optimizer.minimize(loss_op)
 init = tf.global_variables_initializer()
 with tf.Session() as sess:
 	sess.run(init)
-	tf.train.Saver([v for v in tf.all_varaibles() if v.name[:1]==namechar]).restore(sess, "models/model6.ckpt")
+	if toRestore == True:
+		tf.train.Saver([v for v in tf.global_variables() if v.name[:1]==namechar]).restore(sess, modelfile)
 	# Training cycle
 	writer = tf.summary.FileWriter('./graph', sess.graph);writer.close();
 	for epoch in range(training_epochs):
@@ -256,5 +233,7 @@ with tf.Session() as sess:
 			logits_test = logits.eval({X: x_test, Y: y_test, keep_prob: 1.0, dtw: dtw_test})
 			print("F1-test:", f1(logits_test,y_test))
 	print("Optimization Finished!")
-	save_path = tf.train.Saver([v for v in tf.all_variables() if v.name[:1]==namechar]).save(sess, "models/model6.ckpt")
+	logits_test = logits.eval({X: x_test, Y: y_test, keep_prob: 1.0, dtw: dtw_test})
+	print("F1-test:", f1(logits_test,y_test))
+	save_path = tf.train.Saver([v for v in tf.global_variables() if v.name[:1]==namechar]).save(sess, modelfile)
 	print("Model saved in file: %s" % save_path)

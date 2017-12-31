@@ -5,86 +5,12 @@ Project: https://github.com/aymericdamien/TensorFlow-Examples/
 from __future__ import print_function
 import tensorflow as tf
 import numpy as np
-import scipy.fftpack as fft
-from fastdtw import fastdtw
-import scipy.signal as sg
-from scipy.spatial.distance import euclidean
 
-def preprocess():
-	# inputting data
-	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
-	np.random.shuffle(data)
-	x_train = data[:,1:]
-	y_train = data[:, 0, np.newaxis] - 1
-	y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
-	dtw_train = [None]*x_train.shape[0]
-	data = np.loadtxt('exoTest.csv',skiprows=1,delimiter=',')
-	x_test = data[:,1:]
-	y_test = data[:, 0, np.newaxis] - 1
-	y_test = np.concatenate((1-y_test,y_test),axis=1).astype(int)
-	dtw_test = [None]*x_test.shape[0]
-	del data
-	template = np.linspace(1, x_train.shape[1], 1, endpoint=False)
-	print('Data inputted')
-	print('Preprocessing data')
-	for  i in range(x_train.shape[0]):
-		if i%100 == 0 :
-			print(i)
-		x_train[i] = sg.medfilt(x_train[i],3)
-		x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
-		y = template*np.mean(x_train[i])
-		y[0] = x_train[i][0]
-		y[-1] = x_train[i][-1]	
-		distance, path = fastdtw(x_train[i], y, dist=euclidean)
-		dtw_train[i] = distance
-	for  i in range(x_test.shape[0]):
-		if i%100 == 0 :
-			print(i)
-		x_test[i] = sg.medfilt(x_test[i],3)
-		x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
-		y = template*np.mean(x_test[i])
-		y[0] = x_test[i][0]
-		y[-1] = x_test[i][-1]	
-		distance, path = fastdtw(x_test[i], y, dist=euclidean)
-		dtw_test[i] = distance
-	print('Preprocessing done')
-	np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
-
-# preprocess()
-
-# [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
-# x_train = x_train[:,96:3095]
-# x_test = x_test[:,96:3095]
-
-# # x_test=x_train[:500]
-# # y_test=y_train[:500]
-# # dtw_test = dtw_train[:500]
-# # # x_test=np.concatenate((x_test,x_train[:500]))
-# # # y_test=np.concatenate((y_test,y_train[:500]))
-# # # dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
-# # x_train = x_train[500:]
-# # y_train = y_train[500:]
-# # dtw_train = dtw_train[500:]
-
-
-# dtw_test = np.array(dtw_test).reshape([-1,1])
-# dtw_train = np.array(dtw_train).reshape([-1,1])
-
-# x_train = fft.dct(x_train)
-# x_train = x_train[:,20:800]
-# x_test = fft.dct(x_test)
-# x_test = x_test[:,20:800]
-
-# x_train = ((x_train - np.mean(x_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_train,axis=1, keepdims = True).reshape(-1,1))
-# x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_test,axis=1, keepdims = True).reshape(-1,1))
-# dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
-# dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
-
-# np.save('preprocessed_final',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_final.npy')
+# [x_train,y_train,dtw_train] = np.load('preprocessed1.npy')
 
 # Parameters
-learning_rate = 0.001
+learning_rate = 0.00003
 training_epochs = 1000
 batch_size = 300
 display_step = 1
@@ -195,11 +121,13 @@ logits_4 = conv_net_2c1d(X,dtw,keep_prob,32,16,128,'2',False)
 logits_5 = conv_net_2c1d(X,dtw,keep_prob,30,15,100,'3',False)
 logits_6 = conv_net_2c1d(X,dtw,keep_prob,48,32,128,'4',False)
 
+# wd=tf.Variable(tf.random_normal([8,2]))
+# bd=tf.Variable(tf.random_normal([2]))
 w1 = tf.Variable(tf.random_normal([1]),name = 'w1')
 w2 = tf.Variable(tf.random_normal([1]),name = 'w2')
 w3 = tf.Variable(tf.random_normal([1]),name = 'w3')
 w4 = tf.Variable(tf.random_normal([1]),name = 'w4')
-# logits_concat = tf.concat([logits_3,logits_4,logits_5,logits_6],1)
+# logits_concat = tf.concat([d1,d2,d3,d4],1)
 # logits = tf.add(tf.matmul(logits_concat, wd),bd)
 logits = (w1*d1+w2*d2+w3*d3+w4*d4)/(w1+w2+w3+w4)
 
@@ -213,27 +141,21 @@ train_op = optimizer.minimize(loss_op)
 init = tf.global_variables_initializer()
 with tf.Session() as sess:
 	sess.run(init)
-	tf.train.Saver().restore(sess,"models/model_boost_1_1.ckpt")
+	tf.train.Saver().restore(sess,"models/model_boost.ckpt")
 	# tf.train.Saver([v for v in tf.global_variables() if v.name[:1]=='1']).restore(sess, "models/model3.ckpt")
 	# tf.train.Saver([v for v in tf.global_variables() if v.name[:1]=='2']).restore(sess, "models/model4.ckpt")
 	# tf.train.Saver([v for v in tf.global_variables() if v.name[:1]=='3']).restore(sess, "models/model5.ckpt")
 	# tf.train.Saver([v for v in tf.global_variables() if v.name[:1]=='4']).restore(sess, "models/model6.ckpt")
 	# Training cycle
-	writer = tf.summary.FileWriter('./graph', sess.graph);writer.close();
+	# writer = tf.summary.FileWriter('./graph', sess.graph);writer.close();
 	total_batch = int(len(x_train)/batch_size)
-	# d1_val = sess.run(logits_3,feed_dict = {
-	# 	X : x_train,
-	# 	Y : y_train,
-	# 	dtw : dtw_train,
-	# 	keep_prob : 1.0
-	# 	})
-	# X_batches = np.array_split(x_train, total_batch)
+	X_batches = np.array_split(x_train, total_batch)
 	Y_batches = np.array_split(y_train, total_batch)
-	# dtw_batches = np.array_split(dtw_train,total_batch)
-	# d1_batches = [None]*total_batch
-	# d2_batches = [None]*total_batch
-	# d3_batches = [None]*total_batch
-	# d4_batches = [None]*total_batch
+	dtw_batches = np.array_split(dtw_train,total_batch)
+	d1_batches = [None]*total_batch
+	d2_batches = [None]*total_batch
+	d3_batches = [None]*total_batch
+	d4_batches = [None]*total_batch
 	# for i in range(total_batch):
 	# 	print(i)
 	# 	[d1_batches[i],d2_batches[i],d3_batches[i],d4_batches[i]] = sess.run([logits_3,logits_4,logits_5,logits_6],feed_dict={
@@ -263,8 +185,14 @@ with tf.Session() as sess:
 															d4: d4_batches[i],
 															Y: Y_batches[i]
 														})
-			# logits_test = logits.eval({X: batch_x, Y: batch_y, keep_prob: 1.0, dtw: batch_dtw})
-			# print("F1-test:", f1(logits_test,batch_y))
+			# logits_test = logits.eval({
+			# 							d1: d1_batches[i],
+			# 							d2: d2_batches[i],
+			# 							d3: d3_batches[i],
+			# 							d4: d4_batches[i],
+			# 							Y: Y_batches[i]
+			# 						})
+			# print("F1-test:", f1(logits_test,Y_batches[i]))
 			# Compute average loss
 			avg_cost += c / total_batch
 		# Display logs per epoch step
@@ -280,5 +208,5 @@ with tf.Session() as sess:
 			print("logits")
 			print("F1-test:", f1(logits_test,y_test))
 	print("Optimization Finished!")
-	save_path = tf.train.Saver().save(sess, "models/model_boost_1_1.ckpt")
+	save_path = tf.train.Saver().save(sess, "models/model_boost.ckpt")
 	print("Model saved in file: %s" % save_path)
