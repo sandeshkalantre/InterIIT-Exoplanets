@@ -10,92 +10,24 @@ from fastdtw import fastdtw
 import scipy.signal as sg
 from scipy.spatial.distance import euclidean
 
-def preprocess():
-	# inputting data
-	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
-	np.random.shuffle(data)
-	x_train = data[:,1:]
-	y_train = data[:, 0, np.newaxis] - 1
-	y_train = np.concatenate((1-y_train,y_train),axis=1).astype(int)
-	dtw_train = [None]*x_train.shape[0]
-	data = np.loadtxt('exoTest.csv',skiprows=1,delimiter=',')
-	x_test = data[:,1:]
-	y_test = data[:, 0, np.newaxis] - 1
-	y_test = np.concatenate((1-y_test,y_test),axis=1).astype(int)
-	dtw_test = [None]*x_test.shape[0]
-	del data
-	template = np.linspace(1, x_train.shape[1], 1, endpoint=False)
-	print('Data inputted')
-	print('Preprocessing data')
-	for  i in range(x_train.shape[0]):
-		if i%100 == 0 :
-			print(i)
-		x_train[i] = sg.medfilt(x_train[i],3)
-		x_train[i] = x_train[i] - sg.medfilt(x_train[i],101)
-		y = template*np.mean(x_train[i])
-		y[0] = x_train[i][0]
-		y[-1] = x_train[i][-1]	
-		distance, path = fastdtw(x_train[i], y, dist=euclidean)
-		dtw_train[i] = distance
-	for  i in range(x_test.shape[0]):
-		if i%100 == 0 :
-			print(i)
-		x_test[i] = sg.medfilt(x_test[i],3)
-		x_test[i] = x_test[i] - sg.medfilt(x_test[i],101)
-		y = template*np.mean(x_test[i])
-		y[0] = x_test[i][0]
-		y[-1] = x_test[i][-1]	
-		distance, path = fastdtw(x_test[i], y, dist=euclidean)
-		dtw_test[i] = distance
-	print('Preprocessing done')
-	np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
-
-# preprocess()
-
-# [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
-# x_train = x_train[:,96:3095]
-# x_test = x_test[:,96:3095]
-
-# x_test=x_train[:500]
-# y_test=y_train[:500]
-# dtw_test = dtw_train[:500]
-# # x_test=np.concatenate((x_test,x_train[:500]))
-# # y_test=np.concatenate((y_test,y_train[:500]))
-# # dtw_test=np.concatenate((dtw_test,dtw_train[:500]))
-# x_train = x_train[500:]
-# y_train = y_train[500:]
-# dtw_train = dtw_train[500:]
-
-
-# dtw_test = np.array(dtw_test).reshape([-1,1])
-# dtw_train = np.array(dtw_train).reshape([-1,1])
-
-# x_train = fft.dct(x_train)
-# x_train = x_train[:,20:800]
-# x_test = fft.dct(x_test)
-# x_test = x_test[:,20:800]
-
-# x_train = ((x_train - np.mean(x_train,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_train,axis=1, keepdims = True).reshape(-1,1))
-# x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.std(x_test,axis=1, keepdims = True).reshape(-1,1))
-# dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
-# dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
-
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_final.npy')
+# dtw_test = dtw_test.reshape([-1,1])
+# dtw_train = dtw_train.reshape([-1,1])
 
 # Parameters
-learning_rate = 0.001
+learning_rate = 0.01
 training_epochs = 5
 batch_size = 300
 display_step = 1
-namechar = '1'
-modelfile = 'models/model3.ckpt'
-models_params = [40,80,500]
-toRestore = True
+namechar = '2'
+models_params = [50,100,1000]
+toRestore = False
+modelfile = 'models/model'+namechar+'.ckpt'
 
 # Network Parameters
 num_input = x_train.shape[1]
 num_classes = 2
-dropout = 0.80 # Dropout, probability to keep units
+dropout = 0.75 # Dropout, probability to keep units
 
 # tf Graph input
 X = tf.placeholder("float", [None, num_input])
@@ -230,8 +162,6 @@ with tf.Session() as sess:
 		# Display logs per epoch step
 		if epoch % display_step == 0:
 			print("Epoch:", '%04d' % (epoch+1), "cost={:.9f}".format(avg_cost))
-			logits_test = logits.eval({X: x_test, Y: y_test, keep_prob: 1.0, dtw: dtw_test})
-			print("F1-test:", f1(logits_test,y_test))
 	print("Optimization Finished!")
 	logits_test = logits.eval({X: x_test, Y: y_test, keep_prob: 1.0, dtw: dtw_test})
 	print("F1-test:", f1(logits_test,y_test))
