@@ -16,11 +16,11 @@ from scipy.spatial.distance import euclidean
 
 # Parameters
 learning_rate = 0.01
-training_epochs = 5
+training_epochs = 25
 batch_size = 300
 display_step = 1
-namechar = '2'
-models_params = [50,100,1000]
+namechar = '4'
+models_params = [50,120,1000]
 toRestore = False
 modelfile = 'models/model'+namechar+'.ckpt'
 
@@ -34,6 +34,11 @@ X = tf.placeholder("float", [None, num_input])
 Y = tf.placeholder("float", [None, num_classes])
 dtw = tf.placeholder("float", [None, 1])
 keep_prob = tf.placeholder(tf.float32) # dropout (keep probability)
+
+config = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, \
+        allow_soft_placement=True, device_count = {'CPU': 1})
+
+
 
 # Store layers weight & bias
 def weight(out1,out2,out3,name):
@@ -132,7 +137,7 @@ train_op = optimizer.minimize(loss_op)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
-with tf.Session() as sess:
+with tf.Session(config=config) as sess:
 	sess.run(init)
 	if toRestore == True:
 		tf.train.Saver([v for v in tf.global_variables() if v.name[:1]==namechar]).restore(sess, modelfile)
