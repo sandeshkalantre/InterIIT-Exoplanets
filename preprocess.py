@@ -1,3 +1,7 @@
+"""
+https://www.kaggle.com/muonneutrino/exoplanet-data-visualization-and-exploration
+We took reduce_upper_outliers function from the link and it also inspired our preprocessing pipeline
+"""
 from __future__ import print_function
 import numpy as np
 import scipy.fftpack as fft
@@ -9,11 +13,6 @@ from scipy.signal import savgol_filter
 import scipy
 
 def reduce_upper_outliers(df,reduce = 0.01, half_width=4):
-	'''
-	Since we are looking at dips in the data, we should remove upper outliers.
-	The function is taken from here:
-	https://www.kaggle.com/muonneutrino/exoplanet-data-visualization-and-exploration
-	'''
 	length = len(df.iloc[0,:])
 	remove = int(length*reduce)
 	for i in df.index.values:
@@ -45,7 +44,7 @@ def reduce_upper_outliers(df,reduce = 0.01, half_width=4):
 
 def preprocess():
 	# inputting data
-	data = np.loadtxt('/net/voxel01/misc/extra/code/jimmy/Exoplanets/exoTrain.csv',skiprows=1,delimiter=',')
+	data = np.loadtxt('/net/voxel01/misc/extra/code/jimmy/Exoplanets/Final_Test.csv',skiprows=1,delimiter=',')
 	np.random.shuffle(data)
 	x_train = data[:,1:]
 	y_train = data[:, 0, np.newaxis] - 1

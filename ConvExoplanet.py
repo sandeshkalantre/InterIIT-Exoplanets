@@ -10,7 +10,7 @@ from fastdtw import fastdtw
 import scipy.signal as sg
 from scipy.spatial.distance import euclidean
 
-[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('/net/voxel01/misc/extra/code/jimmy/Exoplanets/preprocessed_final.npy')
+[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('/net/voxel01/misc/extra/code/jimmy/Exoplanets/preprocessed_final_madras.npy')
 
 x_train = np.concatenate((x_train,x_test))
 y_train = np.concatenate((y_train,y_test))
@@ -47,9 +47,9 @@ def runcnn(iterationstring,namechar,models_params):
 
 		# Parameters
 		learning_rate = 0.01
-		training_epochs = 30
+		training_epochs = 6 
 		batch_size = 300
-		display_step = 5
+		display_step = 1
 		
 		toRestore = False 
 		modelfile = 'models/model'+iterationstring+str(i)+'.ckpt'
@@ -207,11 +207,11 @@ iterationstring = '___'
 namechar = '3'
 models_params = [30,60,600]
 runcnn(iterationstring,namechar,models_params)
-iterationstring = '____'
+iterationstring = '__'
 namechar = '2'
 models_params = [30,60,1000]
 runcnn(iterationstring,namechar,models_params)
-iterationstring = '____'
+iterationstring = '_'
 namechar = '1'
 models_params = [30,60,500]
 runcnn(iterationstring,namechar,models_params)
