@@ -8,6 +8,18 @@ import pandas as pd
 from scipy.signal import savgol_filter
 import scipy
 
+def data_augment(input_dataset,output,slice=5):
+	print("running data augmentor")
+	output = np.empty([slice*input_dataset.shape[0],(input_dataset.shape[1]-slice +1)])
+	for i in range(input_dataset.shape[0]):
+		for j in range(1,slice+1):
+			output[i*5+j-1][1:] = input_dataset[i][j:(input_dataset.shape[1]-slice+j)]
+			output[i*5+j-1][0] = input_dataset[i][0]
+
+	return output 		 
+
+
+
 def reduce_upper_outliers(df,reduce = 0.01, half_width=4):
 	'''
 	Since we are looking at dips in the data, we should remove upper outliers.
@@ -46,6 +58,9 @@ def reduce_upper_outliers(df,reduce = 0.01, half_width=4):
 def preprocess():
 	# inputting data
 	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
+	output = []
+	data = data_augment(data,output,5)
+	print(data.shape)
 	np.random.shuffle(data)
 	x_train = data[:,1:]
 	y_train = data[:, 0, np.newaxis] - 1
@@ -93,7 +108,7 @@ def preprocess():
 	print('Preprocessing done')
 	np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
-# preprocess()
+preprocess()
 print('reducing')
 [x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
 
