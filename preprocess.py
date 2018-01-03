@@ -45,7 +45,7 @@ def reduce_upper_outliers(df,reduce = 0.01, half_width=4):
 
 def preprocess():
 	# inputting data
-	data = np.loadtxt('exoTrain.csv',skiprows=1,delimiter=',')
+	data = np.loadtxt('/net/voxel01/misc/extra/code/jimmy/Exoplanets/exoTrain.csv',skiprows=1,delimiter=',')
 	np.random.shuffle(data)
 	x_train = data[:,1:]
 	y_train = data[:, 0, np.newaxis] - 1
@@ -91,11 +91,14 @@ def preprocess():
 	dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
 	dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
 	print('Preprocessing done')
-	np.save('preprocessed',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
+	np.save('preprocessed_iitmdata',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
 
 # preprocess()
 print('reducing')
-[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed.npy')
+[x_train,y_train,dtw_train,x_test,y_test,dtw_test] = np.load('preprocessed_iitmdata.npy')
+
+x_train = x_train[:,100:3100]
+x_test = x_test[:,100:3100]
 
 x_test=x_train[:500]
 y_test=y_train[:500]
@@ -138,4 +141,4 @@ x_test = ((x_test - np.mean(x_test,axis=1, keepdims = True).reshape(-1,1)) / np.
 dtw_train = (dtw_train-np.mean(dtw_train))/np.std(dtw_train)
 dtw_test = (dtw_test-np.mean(dtw_test))/np.std(dtw_test)
 
-np.save('preprocessed_final',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
+np.save('preprocessed_final_iitmdata',[x_train,y_train,dtw_train,x_test,y_test,dtw_test])
